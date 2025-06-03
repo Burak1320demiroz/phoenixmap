@@ -1,3 +1,11 @@
+"""
+phoenixmap
+Copyright (c) 2025 Burak Demiröz
+
+This source code is licensed under the MIT License.
+See the LICENSE file for details.
+"""
+
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait

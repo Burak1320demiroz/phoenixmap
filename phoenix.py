@@ -1,4 +1,13 @@
 #!/usr/bin/env python3
+
+"""
+phoenixmap
+Copyright (c) 2025 Burak Demiröz
+
+This source code is licensed under the MIT License.
+See the LICENSE file for details.
+"""
+
 import os
 import subprocess
 
